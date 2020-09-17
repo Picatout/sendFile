@@ -6,7 +6,7 @@
 #include <time.h>
 #include <string.h>
 
-void usage(){
+static void usage(){
 	puts("Command line tool to send forth file to stm8_eForth MCU");
 	puts("USAGE: SendFile -s device [-b baud] [-d msec] file_name");
 	puts("  -s device serial port to use.");
@@ -16,32 +16,39 @@ void usage(){
 	exit(0);
 }
 
-unsigned int msec=50;
-unsigned int baud=115200;
-char* file_name;
-char* serial_port=NULL; 
+static unsigned int msec=100;
+static unsigned int baud=115200;
+static char* file_name;
+static char* serial_port=NULL; 
 
-int fd; // serial port handle
-struct termios serial_port_old_settings; 
+static int fd; // serial port handle
+static struct termios serial_port_old_settings; 
+
+static int serial_getchar(int fd){
+    int bc=0,c=0;
+    while (!bc) bc=read(fd,&c,1);
+    return c;
+}
+
 
 static void serial_putchar(int fd, int c){
     write(fd,&c,1);
-    tcdrain(fd);
+    putchar(serial_getchar(fd)); //echo
 }
 
 static void serial_writeln(int fd,const char* buff){
     while (*buff) serial_putchar(fd,*buff++);
-    tcdrain(fd);
+   // tcdrain(fd);
 }
 
-void delay(unsigned int ms) 
+static void delay(unsigned int ms) 
 { 
     double start_time = (double)(clock()+(clock_t)(ms*1000)); 
     while ((double)clock() < start_time); 
 }
  
-// Send Intel HEX file to MCU
-void send_file(){
+// Send Forth source file to MCU
+static void send_file(){
 #define LINE_SIZE (128)
     FILE* fh;
     char line[LINE_SIZE];
@@ -56,7 +63,6 @@ void send_file(){
         while (!feof(fh)){
             line[0]=0;
             fgets(line,LINE_SIZE,fh);
-            puts(line);
             serial_writeln(fd,line);
 			delay(msec);
 			lncnt++;
