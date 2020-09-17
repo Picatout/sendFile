@@ -16,10 +16,17 @@ static void usage(){
 	exit(0);
 }
 
+#define LF (10)
+#define CR (13)
+
 static unsigned int msec=100;
 static unsigned int baud=115200;
 static char* file_name;
 static char* serial_port=NULL; 
+
+#define LINE_SIZE (128)
+static char line[LINE_SIZE];
+static int in;
 
 static int fd; // serial port handle
 static struct termios serial_port_old_settings; 
@@ -46,12 +53,26 @@ static void delay(unsigned int ms)
     double start_time = (double)(clock()+(clock_t)(ms*1000)); 
     while ((double)clock() < start_time); 
 }
+
+// scan line for character 'c' 
+static void scan(char c){
+	while (line[in] && line[in]!=c) in++;
+	
+}
+ 
+static void remove_comment(){
+	in=0;
+	scan('\\');
+	if (line[in]=='\\' && line[in-1]==' ' && line[in+1]==' '){
+		line[in-1]=CR;
+		line[in]=LF;
+		line[in+1]=0;
+	}	
+}
  
 // Send Forth source file to MCU
 static void send_file(){
-#define LINE_SIZE (128)
     FILE* fh;
-    char line[LINE_SIZE];
     int lncnt=0; 
 
     fh=fopen(file_name,"r");
@@ -63,6 +84,7 @@ static void send_file(){
         while (!feof(fh)){
             line[0]=0;
             fgets(line,LINE_SIZE,fh);
+            remove_comment(line);
             serial_writeln(fd,line);
 			delay(msec);
 			lncnt++;
@@ -127,9 +149,8 @@ int main(int argc, char**argv){
 // convert break to null byte, no CR to NL translation,
 // no NL to CR translation, don't mark parity errors or breaks
 // no input parity check, don't strip high bit off,
-// no XON/XOFF software flow control
 //
-    SerialPortSettings.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
+    SerialPortSettings.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP );
 
 //
 // Output flags - Turn off output processing
