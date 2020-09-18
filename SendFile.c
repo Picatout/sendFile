@@ -60,6 +60,13 @@ static void scan(char c){
 	
 }
  
+// skip charater 'c'
+static void skip(char c){
+     in=0;
+     while (line[in] && line[in]==c) in++;
+     if (in) memmove(&line[0],&line[in],strlen(line)-in+1);
+}
+ 
 static void remove_comment(){
 	in=0;
 	if (line[0]==CR || line[0]==LF || (line[0]=='\\' && line[1]==' ') ){
@@ -73,6 +80,7 @@ static void remove_comment(){
 		line[in+1]=0;
 	}	
 }
+ 
  
 // Send Forth source file to MCU
 static void send_file(){
@@ -88,7 +96,8 @@ static void send_file(){
         while (!feof(fh)){
             line[0]=0;
             fgets(line,LINE_SIZE,fh);
-            remove_comment(line);
+            skip(' ');
+            remove_comment();
             if (strlen(line)){
                 serial_writeln(fd,line);
 			    delay(msec);
