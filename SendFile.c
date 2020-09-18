@@ -62,6 +62,10 @@ static void scan(char c){
  
 static void remove_comment(){
 	in=0;
+	if (line[0]==CR || line[0]==LF || (line[0]=='\\' && line[1]==' ') ){
+		line[0]=0;
+		return;
+	}
 	scan('\\');
 	if (line[in]=='\\' && line[in-1]==' ' && line[in+1]==' '){
 		line[in-1]=CR;
@@ -85,8 +89,10 @@ static void send_file(){
             line[0]=0;
             fgets(line,LINE_SIZE,fh);
             remove_comment(line);
-            serial_writeln(fd,line);
-			delay(msec);
+            if (strlen(line)){
+                serial_writeln(fd,line);
+			    delay(msec);
+		    }
 			lncnt++;
         };
         fclose(fh);
@@ -95,18 +101,24 @@ static void send_file(){
 }
 
 int main(int argc, char**argv){
+	char opt;
 	
 	int i=1;
-	if (argc<4) usage();
+	if (argc<3) usage();
 	while(i<argc){
 	  if (argv[i][0]=='-'){
-		switch(argv[i][1]){
-		case 's':
+		opt=argv[i][1];
+		if (strlen(argv[i])>2){
+		    memmove(&argv[i][0],&argv[i][2],strlen(argv[i])-1);	
+		}
+		else{
 			i++;
+		}
+		switch(opt){
+		case 's':
 			serial_port=argv[i];
 		break;
 		case 'd':
-			i++;
 			msec=(clock_t)atoi(argv[i]);
 		break;
 		default:
@@ -196,5 +208,7 @@ SerialPortSettings.c_cc[VTIME] = 0;
 		tcsetattr(fd,TCSANOW,&serial_port_old_settings);
     }
 	close(fd);
+	puts("");
+	return -1;
 }
 
