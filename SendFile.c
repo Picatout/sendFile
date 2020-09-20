@@ -8,7 +8,7 @@
 
 static void usage(){
 	puts("Command line tool to send forth file to stm8_eForth MCU");
-	puts("USAGE: SendFile -s device [-b baud] [-d msec] file_name");
+	puts("USAGE: SendFile -s device [-d msec] file_name");
 	puts("  -s device serial port to use.");
 	puts("  -d msec  delay in msec between text lines. Default to 50.");
 	puts("   file_name   file to send.");

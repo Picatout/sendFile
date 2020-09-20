@@ -11,3 +11,7 @@ To be used with stm8_eforth.
 	* Port config  115200 8N1 no flow control. 
  
 
+## exemple
+
+	SendFile -s/dev/ttyS0 stm8105.f
+	
