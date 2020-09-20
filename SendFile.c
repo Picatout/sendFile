@@ -16,10 +16,17 @@ static void usage(){
 	exit(0);
 }
 
+#define LF (10)
+#define CR (13)
+
 static unsigned int msec=100;
 static unsigned int baud=115200;
 static char* file_name;
 static char* serial_port=NULL; 
+
+#define LINE_SIZE (128)
+static char line[LINE_SIZE];
+static int in;
 
 static int fd; // serial port handle
 static struct termios serial_port_old_settings; 
@@ -46,12 +53,38 @@ static void delay(unsigned int ms)
     double start_time = (double)(clock()+(clock_t)(ms*1000)); 
     while ((double)clock() < start_time); 
 }
+
+// scan line for character 'c' 
+static void scan(char c){
+	while (line[in] && line[in]!=c) in++;
+	
+}
+ 
+// skip charater 'c'
+static void skip(char c){
+     in=0;
+     while (line[in] && line[in]==c) in++;
+     if (in) memmove(&line[0],&line[in],strlen(line)-in+1);
+}
+ 
+static void remove_comment(){
+	in=0;
+	if (line[0]==CR || line[0]==LF || (line[0]=='\\' && line[1]==' ') ){
+		line[0]=0;
+		return;
+	}
+	scan('\\');
+	if (line[in]=='\\' && line[in-1]==' ' && line[in+1]==' '){
+		line[in-1]=CR;
+		line[in]=LF;
+		line[in+1]=0;
+	}	
+}
+ 
  
 // Send Forth source file to MCU
 static void send_file(){
-#define LINE_SIZE (128)
     FILE* fh;
-    char line[LINE_SIZE];
     int lncnt=0; 
 
     fh=fopen(file_name,"r");
@@ -63,8 +96,12 @@ static void send_file(){
         while (!feof(fh)){
             line[0]=0;
             fgets(line,LINE_SIZE,fh);
-            serial_writeln(fd,line);
-			delay(msec);
+            skip(' ');
+            remove_comment();
+            if (strlen(line)){
+                serial_writeln(fd,line);
+			    delay(msec);
+		    }
 			lncnt++;
         };
         fclose(fh);
@@ -73,18 +110,24 @@ static void send_file(){
 }
 
 int main(int argc, char**argv){
+	char opt;
 	
 	int i=1;
-	if (argc<4) usage();
+	if (argc<3) usage();
 	while(i<argc){
 	  if (argv[i][0]=='-'){
-		switch(argv[i][1]){
-		case 's':
+		opt=argv[i][1];
+		if (strlen(argv[i])>2){
+		    memmove(&argv[i][0],&argv[i][2],strlen(argv[i])-1);	
+		}
+		else{
 			i++;
+		}
+		switch(opt){
+		case 's':
 			serial_port=argv[i];
 		break;
 		case 'd':
-			i++;
 			msec=(clock_t)atoi(argv[i]);
 		break;
 		default:
@@ -127,9 +170,8 @@ int main(int argc, char**argv){
 // convert break to null byte, no CR to NL translation,
 // no NL to CR translation, don't mark parity errors or breaks
 // no input parity check, don't strip high bit off,
-// no XON/XOFF software flow control
 //
-    SerialPortSettings.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
+    SerialPortSettings.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP );
 
 //
 // Output flags - Turn off output processing
@@ -175,5 +217,7 @@ SerialPortSettings.c_cc[VTIME] = 0;
 		tcsetattr(fd,TCSANOW,&serial_port_old_settings);
     }
 	close(fd);
+	puts("");
+	return -1;
 }
 
