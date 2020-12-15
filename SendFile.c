@@ -148,10 +148,13 @@ int main(int argc, char**argv){
         printf("\n  Error! in Opening %s\n\n",serial_port);
         _exit(-1);
     }
+	/*
     if(!isatty(fd)){
         puts("Not a serial port.");
         _exit(-1);
     }
+	*/
+	
 /*---------- Setting the Attributes of the serial port using termios structure --------- */
 		
     struct termios SerialPortSettings;	/* Create the structure                          */
