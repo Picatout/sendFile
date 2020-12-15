@@ -219,6 +219,8 @@ SerialPortSettings.c_cc[VTIME] = 0;
 		send_file();
 		tcsetattr(fd,TCSANOW,&serial_port_old_settings);
     }
+	serial_putchar(fd,13);
+	//serial_putchar(fd,10);	
 	close(fd);
 	puts("");
 	return -1;
