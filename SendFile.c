@@ -148,12 +148,12 @@ int main(int argc, char**argv){
         printf("\n  Error! in Opening %s\n\n",serial_port);
         _exit(-1);
     }
-	/*
+	
     if(!isatty(fd)){
         puts("Not a serial port.");
         _exit(-1);
     }
-	*/
+	
 	
 /*---------- Setting the Attributes of the serial port using termios structure --------- */
 		
@@ -174,7 +174,7 @@ int main(int argc, char**argv){
 // no NL to CR translation, don't mark parity errors or breaks
 // no input parity check, don't strip high bit off,
 //
-    SerialPortSettings.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP );
+    SerialPortSettings.c_iflag &= ~(IGNBRK | BRKINT | ICRNL  | PARMRK | INPCK | ISTRIP );
 
 //
 // Output flags - Turn off output processing
@@ -185,7 +185,7 @@ int main(int argc, char**argv){
 // no local output processing
 //
 SerialPortSettings.c_oflag = 0;
-// SerialPortSettings.c_oflag &= ~(OCRNL | ONLCR | ONLRET | ONOCR | OFILL | OLCUC | OPOST);
+ SerialPortSettings.c_oflag &= ~(OCRNL | ONLRET | ONOCR | OFILL | OLCUC | OPOST);
 
 //
 // No line processing
