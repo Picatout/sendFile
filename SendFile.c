@@ -184,8 +184,8 @@ int main(int argc, char**argv){
 // no Ctrl-D suppression, no fill characters, no case mapping,
 // no local output processing
 //
-SerialPortSettings.c_oflag = 0;
- SerialPortSettings.c_oflag &= ~(OCRNL | ONLRET | ONOCR | OFILL | OLCUC | OPOST);
+SerialPortSettings.c_oflag = ONLCR;
+SerialPortSettings.c_oflag &= ~(OCRNL | ONLRET | ONOCR | OFILL | OLCUC | OPOST);
 
 //
 // No line processing
