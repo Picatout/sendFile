@@ -8,7 +8,7 @@
 
 static void usage(){
 	puts("Command line tool to send forth file to stm8_eForth MCU");
-	puts("USAGE: SendFile -s device [-d msec] file_name");
+	puts("USAGE: SendFile -s device [-d msec] file_name [file2 ... fileN]");
 	puts("  -s device serial port to use.");
 	puts("  -d msec  delay in msec between text lines. Default to 50.");
 	puts("   file_name   file to send.");
@@ -21,12 +21,14 @@ static void usage(){
 
 static unsigned int msec=100;
 static unsigned int baud=115200;
-static char* file_name;
 static char* serial_port=NULL; 
 
-#define LINE_SIZE (128)
+#define LINE_SIZE (79)
 static char line[LINE_SIZE];
 static int in;
+
+#define MAX_FILES (100)
+static char* file_list[MAX_FILES];
 
 static int fd; // serial port handle
 static struct termios serial_port_old_settings; 
@@ -83,7 +85,7 @@ static void remove_comment(){
  
  
 // Send Forth source file to MCU
-static void send_file(){
+static void send_file(const char* file_name ){
     FILE* fh;
     int lncnt=0; 
 
@@ -104,15 +106,22 @@ static void send_file(){
 		    }
 			lncnt++;
         };
+		serial_putchar(fd,CR);
         fclose(fh);
         printf("%d lines sent\n",lncnt);
     }
 }
 
+static void send_list(){
+	int i=0; 
+	while (file_list[i]) send_file(file_list[i++]);
+}
+
 int main(int argc, char**argv){
 	char opt;
-	
+	int fcount=0; 
 	int i=1;
+	file_list[fcount]=NULL; 
 	if (argc<3) usage();
 	while(i<argc){
 	  if (argv[i][0]=='-'){
@@ -134,11 +143,15 @@ int main(int argc, char**argv){
 		usage();
 		}
 	  }else{
-		file_name=argv[i];
+		file_list[fcount]=argv[i];
+		fcount++;
+		if (fcount==(MAX_FILES-1)) i=argc;
+		file_list[fcount]=NULL; 
 	  }
 	  i++;
 	}
-	printf("port=%s, baud=%d,delay=%d file=%s\n",serial_port,baud,(int)msec,file_name);
+
+	printf("port=%s, baud=%d,delay=%d \n",serial_port,baud,(int)msec);
     fd = open(serial_port,O_RDWR | O_NOCTTY | O_NDELAY); 
                             /* O_RDWR   - Read/Write access to serial port       */
                             /* O_NOCTTY - No terminal will control the process   */
@@ -216,11 +229,9 @@ SerialPortSettings.c_cc[VTIME] = 0;
         printf("\n  ERROR ! in Setting attributes");
     else{
 	    tcflush(fd, TCIFLUSH);   /* Discards old data in the rx buffer  */
-		send_file();
+		send_list();
 		tcsetattr(fd,TCSANOW,&serial_port_old_settings);
     }
-	serial_putchar(fd,13);
-	//serial_putchar(fd,10);	
 	close(fd);
 	puts("");
 	return -1;
