@@ -114,7 +114,10 @@ static void send_file(const char* file_name ){
 
 static void send_list(){
 	int i=0; 
-	while (file_list[i]) send_file(file_list[i++]);
+	while (file_list[i]){
+		send_file(file_list[i++]);
+		delay(msec);
+	}
 }
 
 int main(int argc, char**argv){
