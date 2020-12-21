@@ -93,6 +93,7 @@ int freadln(char *buffer, int blen, FILE* fh ){
 		while (!feof(fh) && !eol && (llen<blen)){
 			c=fgetc(fh);
 			if ((c==LF) || (c==CR) ){
+				 buffer[llen++]=CR;
 				 eol=-1;
 			}else{
 				if (c<32) c=32; 
