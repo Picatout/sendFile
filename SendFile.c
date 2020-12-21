@@ -83,6 +83,26 @@ static void remove_comment(){
 	}	
 }
  
+int freadln(char *buffer, int blen, FILE* fh ){
+		char c;
+		int llen,eol;
+		blen--;
+		buffer[0]=0;
+		llen=0;
+		eol=0;
+		while (!feof(fh) && !eol && (llen<blen)){
+			c=fgetc(fh);
+			if ((c==LF) || (c==CR) ){
+				 eol=-1;
+			}else{
+				if (c<32) c=32; 
+				buffer[llen++]=c;
+			}
+		}
+		buffer[llen]=0;
+		return llen;	
+}
+
  
 // Send Forth source file to MCU
 static void send_file(const char* file_name ){
@@ -96,8 +116,7 @@ static void send_file(const char* file_name ){
         // sending file. 1 line at a time.
         printf("Sending file %s\n",file_name);
         while (!feof(fh)){
-            line[0]=0;
-            fgets(line,LINE_SIZE,fh);
+            freadln(line,LINE_SIZE,fh);
             skip(' ');
             remove_comment();
             if (strlen(line)){
