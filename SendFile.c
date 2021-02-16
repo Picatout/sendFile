@@ -116,9 +116,7 @@ static void send_file(const char* file_name ){
     }else{
         // sending file. 1 line at a time.
         printf("Sending file %s\n",file_name);
-        sprintf(line,"\r\n");
         delay(msec);
-        serial_writeln(fd,line);
         while (!feof(fh)){
             freadln(line,LINE_SIZE,fh);
             skip(' ');
