@@ -42,12 +42,10 @@ static int serial_getchar(int fd){
 
 static void serial_putchar(int fd, int c){
     write(fd,&c,1);
-    putchar(serial_getchar(fd)); //echo
 }
 
 static void serial_writeln(int fd,const char* buff){
-    while (*buff) serial_putchar(fd,*buff++);
-   // tcdrain(fd);
+    write(fd,buff,strlen(buff));
 }
 
 static void delay(unsigned int ms) 
@@ -101,6 +99,7 @@ int freadln(char *buffer, int blen, FILE* fh ){
 			}
 		}
 		buffer[llen]=0;
+		//puts(buffer);
 		return llen;	
 }
 
@@ -115,10 +114,11 @@ static void send_file(const char* file_name ){
         printf("%s is not a file.\n",file_name);
     }else{
         // sending file. 1 line at a time.
-        printf("Sending file %s\n",file_name);
+        printf("Sending file %s\n\n",file_name);
         delay(msec);
         while (!feof(fh)){
             freadln(line,LINE_SIZE,fh);
+            puts(line);
             skip(' ');
             remove_comment();
             if (strlen(line)){
@@ -230,7 +230,7 @@ SerialPortSettings.c_oflag &= ~(OCRNL | ONLRET | ONOCR | OFILL | OLCUC | OPOST);
 // echo off, echo newline off, canonical mode off, 
 // extended input processing off, signal chars off
 //
-SerialPortSettings.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+SerialPortSettings.c_lflag &= ~(ICANON | ISIG | ECHO | ECHOE); //~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
 
 //
 // Turn off character processing
